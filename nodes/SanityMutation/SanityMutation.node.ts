@@ -14,13 +14,13 @@ import {
  * It defines the node's properties for the UI and contains the
  * full execution logic to communicate with the Sanity Mutations API.
  */
-export class Sanity implements INodeType {
+export class SanityMutation implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'SanityMutation',
 		name: 'sanityMutation',
 		// You can find a suitable icon on websites like simpleicons.org
 		// The format is 'file:sanity.svg'
-		icon: 'file:sanity.svg',
+		icon: 'file:sanityMutation.svg',
 		group: ['output'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
@@ -159,7 +159,7 @@ export class Sanity implements INodeType {
 		const returnData: INodeExecutionData[] = [];
 
 		// 1. Get credentials
-		const credentials = (await this.getCredentials('sanityApi')) as ICredentialDataDecryptedObject;
+		const credentials = (await this.getCredentials('sanityMutationApi')) as ICredentialDataDecryptedObject;
 		const projectId = credentials.projectId as string;
 		const dataset = credentials.dataset as string;
 		const token = credentials.token as string;

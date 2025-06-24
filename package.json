@@ -1,15 +1,15 @@
 {
-  "name": "n8n-nodes-<...>",
+  "name": "n8n-nodes-sanity-mutation",
   "version": "0.1.0",
-  "description": "",
+  "description": "n8n node for Sanity.io mutations",
   "keywords": [
     "n8n-community-node-package"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "realthreads.io",
   "author": {
-    "name": "",
-    "email": ""
+    "name": "David",
+    "email": "david@realthreads.io"
   },
   "repository": {
     "type": "git",
@@ -20,12 +20,12 @@
   },
   "main": "index.js",
   "scripts": {
-    "build": "npx rimraf dist && tsc && gulp build:icons",
+    "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
-    "format": "prettier nodes credentials --write",
-    "lint": "eslint nodes credentials package.json",
-    "lintfix": "eslint nodes credentials package.json --fix",
-    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+    "format": "prettier --write nodes credentials",
+    "lint": "eslint nodes credentials --ext .js,.ts",
+    "lint:fix": "eslint nodes credentials --ext .js,.ts --fix",
+    "prepublishOnly": "npm run build && npm run format"
   },
   "files": [
     "dist"
@@ -33,12 +33,10 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/ExampleCredentialsApi.credentials.js",
-      "dist/credentials/HttpBinApi.credentials.js"
+      "dist/credentials/SanityMutation.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/SanityMutation.node.js"
     ]
   },
   "devDependencies": {
