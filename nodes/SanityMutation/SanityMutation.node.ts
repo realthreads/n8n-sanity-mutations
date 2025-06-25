@@ -33,7 +33,7 @@ export class SanityMutation implements INodeType {
 		outputs: ['main' as NodeConnectionType],
 		credentials: [
 			{
-				name: 'sanityApi',
+				name: 'sanityMutationApi',
 				required: true,
 			},
 		],
