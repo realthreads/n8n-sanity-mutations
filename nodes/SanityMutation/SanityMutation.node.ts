@@ -5,8 +5,8 @@ import {
 	INodeTypeDescription,
 	NodeOperationError,
 	ICredentialDataDecryptedObject,
-	NodeConnectionType ,
 	IDataObject,
+	NodeConnectionType,
 } from 'n8n-workflow';
 
 /**
@@ -16,10 +16,8 @@ import {
  */
 export class SanityMutation implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'SanityMutation',
+		displayName: 'Sanity Mutation',
 		name: 'sanityMutation',
-		// You can find a suitable icon on websites like simpleicons.org
-		// The format is 'file:sanity.svg'
 		icon: 'file:sanityMutation.svg',
 		group: ['output'],
 		version: 1,
@@ -28,9 +26,8 @@ export class SanityMutation implements INodeType {
 		defaults: {
 			name: 'Sanity',
 		},
-		// Re-added inputs and outputs as they are required by the INodeTypeDescription interface.
-		inputs: ['main' as NodeConnectionType],
-		outputs: ['main' as NodeConnectionType],
+		inputs: ['main'] as NodeConnectionType[],
+		outputs: ['main'] as NodeConnectionType[],
 		credentials: [
 			{
 				name: 'sanityMutationApi',
@@ -38,8 +35,7 @@ export class SanityMutation implements INodeType {
 			},
 		],
 		properties: [
-			// -- RESOURCE FIELD --
-			// For this node, the resource is always 'document'.
+			// ... (All properties remain the same)
 			{
 				displayName: 'Resource',
 				name: 'resource',
@@ -47,9 +43,6 @@ export class SanityMutation implements INodeType {
 				default: 'document',
 				noDataExpression: true,
 			},
-
-			// -- OPERATION FIELD --
-			// This is the core dropdown for selecting the mutation type.
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -84,9 +77,6 @@ export class SanityMutation implements INodeType {
 				],
 				default: 'create',
 			},
-
-			// -- DOCUMENT ID FIELD --
-			// Required for Patch and Delete, optional for Create operations.
 			{
 				displayName: 'Document ID',
 				name: 'documentId',
@@ -100,9 +90,6 @@ export class SanityMutation implements INodeType {
 					},
 				},
 			},
-
-			// -- DOCUMENT DATA / PAYLOAD FIELD --
-			// A JSON editor for the document content or patch data.
 			{
 				displayName: 'Document Data',
 				name: 'documentJson',
@@ -118,9 +105,6 @@ export class SanityMutation implements INodeType {
 					},
 				},
 			},
-
-			// -- ADDITIONAL OPTIONS --
-			// A collection of optional parameters for more control.
 			{
 				displayName: 'Options',
 				name: 'options',
@@ -147,18 +131,10 @@ export class SanityMutation implements INodeType {
 		],
 	};
 
-	/**
-	 * The 'execute' function is the heart of the node.
-	 * It runs for each item that arrives at the node's input.
-	 *
-	 * @param this IExecuteFunctions
-	 * @returns INodeExecutionData[][]
-	 */
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
-		// 1. Get credentials
 		const credentials = (await this.getCredentials('sanityMutationApi')) as ICredentialDataDecryptedObject;
 		const projectId = credentials.projectId as string;
 		const dataset = credentials.dataset as string;
@@ -168,32 +144,37 @@ export class SanityMutation implements INodeType {
 			throw new NodeOperationError(this.getNode(), 'Credentials are not valid!');
 		}
 
-		// 2. Loop through input items
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
-				// 3. Get node parameters for the current item
 				const operation = this.getNodeParameter('operation', itemIndex, '') as string;
 				const documentId = this.getNodeParameter('documentId', itemIndex, '') as string;
-				const documentJson = this.getNodeParameter('documentJson', itemIndex, {}) as IDataObject;
+
+				// ** BUG FIX: Explicitly parse the JSON string from the input field **
+				const documentJsonString = this.getNodeParameter('documentJson', itemIndex, '{}') as string;
+				let documentJson: IDataObject;
+				try {
+					documentJson = JSON.parse(documentJsonString);
+				} catch (e) {
+					throw new NodeOperationError(this.getNode(), `Invalid JSON in "Document Data" field: ${e.message}`, { itemIndex });
+				}
+
 				const options = this.getNodeParameter('options', itemIndex, {}) as {
 					returnDocuments?: boolean;
 					apiVersion?: string;
 				};
 
 				const apiVersion = options.apiVersion || 'v2024-06-21';
-
-				// 4. Construct the Sanity API URL
 				const url = `https://${projectId}.api.sanity.io/${apiVersion}/data/mutate/${dataset}`;
 
-				// 5. Build the mutation payload
 				const mutations: IDataObject[] = [];
 				const mutationPayload: IDataObject = {};
 
 				if (operation === 'delete') {
-					if (!documentId) throw new NodeOperationError(this.getNode(), 'Document ID is required for delete operation.');
+					if (!documentId) {
+						throw new NodeOperationError(this.getNode(), 'Document ID is required for delete operation.');
+					}
 					mutationPayload[operation] = { id: documentId };
 				} else {
-					// Corrected the type of docData to allow adding properties.
 					const docData: IDataObject = { ...documentJson };
 					if (documentId) {
 						docData._id = documentId;
@@ -202,7 +183,6 @@ export class SanityMutation implements INodeType {
 				}
 				mutations.push(mutationPayload);
 
-				// 6. Make the HTTP request
 				const responseData = await this.helpers.httpRequest({
 					method: 'POST',
 					url,
@@ -217,7 +197,6 @@ export class SanityMutation implements INodeType {
 					json: true,
 				});
 
-				// 7. Format the response and return it
 				const results = (responseData as IDataObject).results as IDataObject[];
 				const executionData = this.helpers.constructExecutionMetaData(
 					this.helpers.returnJsonArray(results),
@@ -226,7 +205,6 @@ export class SanityMutation implements INodeType {
 				returnData.push(...executionData);
 
 			} catch (error) {
-				// 8. Error Handling
 				if (this.continueOnFail()) {
 					const executionErrorData = {
 						json: {
@@ -239,11 +217,16 @@ export class SanityMutation implements INodeType {
 					returnData.push(executionErrorData);
 					continue;
 				}
+
+				if (error.isAxiosError && error.response && error.response.data) {
+					const detailedError = JSON.stringify(error.response.data, null, 2);
+					throw new NodeOperationError(this.getNode(), `Sanity API Error: ${detailedError}`, { itemIndex });
+				}
+
 				throw error;
 			}
 		}
 
-		// 9. Return the data for the next node
 		return this.prepareOutputData(returnData);
 	}
 }
