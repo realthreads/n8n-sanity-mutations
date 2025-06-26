@@ -149,7 +149,6 @@ export class SanityMutation implements INodeType {
 				const operation = this.getNodeParameter('operation', itemIndex, '') as string;
 				const documentId = this.getNodeParameter('documentId', itemIndex, '') as string;
 
-				// ** BUG FIX: Explicitly parse the JSON string from the input field **
 				const documentJsonString = this.getNodeParameter('documentJson', itemIndex, '{}') as string;
 				let documentJson: IDataObject;
 				try {
@@ -169,17 +168,27 @@ export class SanityMutation implements INodeType {
 				const mutations: IDataObject[] = [];
 				const mutationPayload: IDataObject = {};
 
+				// ** BUG FIX: Added separate logic for the patch operation **
 				if (operation === 'delete') {
 					if (!documentId) {
 						throw new NodeOperationError(this.getNode(), 'Document ID is required for delete operation.');
 					}
 					mutationPayload[operation] = { id: documentId };
-				} else {
-					const docData: IDataObject = { ...documentJson };
-					if (documentId) {
-						docData._id = documentId;
+				} else if (operation === 'patch') {
+					if (!documentId) {
+						throw new NodeOperationError(this.getNode(), 'Document ID is required for patch operation.');
 					}
-					mutationPayload[operation] = docData;
+					const patchData = { ...documentJson };
+					// A patch operation requires the ID to be at the top level of the patch object, with the key 'id'
+					patchData.id = documentId;
+					mutationPayload[operation] = patchData;
+				} else { // Handles create, createOrReplace, createIfNotExists
+					const createData = { ...documentJson };
+					// A create operation can optionally have an ID, with the key '_id'
+					if (documentId) {
+						createData._id = documentId;
+					}
+					mutationPayload[operation] = createData;
 				}
 				mutations.push(mutationPayload);
 
