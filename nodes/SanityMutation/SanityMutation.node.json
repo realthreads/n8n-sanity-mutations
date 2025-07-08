@@ -1,9 +1,9 @@
 {
 	"node": "SanityMutation.node",
 	"node_name": "SanityMutation",
-	"display_name": "Sanity",
+	"display_name": "Sanity Mutation",
 	"description": "Create, Update, and Delete documents in Sanity.io",
-	"author": "Your Name",
+	"author": "Real Threads",
 	"methods": [
 		"POST"
 	],

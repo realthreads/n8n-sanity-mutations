@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-sanity-mutation",
   "version": "0.1.0",
-  "description": "n8n node for Sanity.io mutations",
+  "description": "n8n nodes for Sanity.io mutations",
   "keywords": [
     "n8n-community-node-package"
   ],
@@ -36,7 +36,8 @@
       "dist/credentials/SanityMutation.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/SanityMutation.node.js"
+      "dist/nodes/SanityMutation.node.js",
+      "dist/nodes/SanitySchemaMapper.node.js"
     ]
   },
   "devDependencies": {

@@ -5,15 +5,17 @@ import {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
-	NodeConnectionType, // Add this import
-	NodeOperationError
+	NodeConnectionType,
+	NodeOperationError,
 } from 'n8n-workflow';
 import set from 'lodash/set';
 
+// --- HELPER FUNCTIONS ---
+
 /**
- * Helper function to generate a random key for Portable Text blocks.
- * Sanity requires unique keys for items in an array.
- * @returns {string} A random 12-character string.
+ * Generates a random key for Portable Text blocks and other array items.
+ * @param {number} length The length of the key.
+ * @returns {string} A random alphanumeric string.
  */
 function generateRandomKey(length = 12): string {
 	const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -24,31 +26,77 @@ function generateRandomKey(length = 12): string {
 	return result;
 }
 
+/**
+ * Finds the type of a field from the Sanity schema based on its path.
+ * @param {any} schema The parsed Sanity document schema.
+ * @param {string} path The field path (e.g., 'slug.current' or 'body').
+ * @returns {string | null} The type of the field, or null if not found.
+ */
+function getFieldTypeFromSchema(schema: any, path: string): string | null {
+	const fieldName = path.split('.')[0];
+	const field = schema.fields.find((f: any) => f.name === fieldName);
+	if (!field) return null;
+
+	// Handle nested fields like 'slug.current'
+	if (path.includes('.') && field.type === 'slug') {
+		return 'slug';
+	}
+
+	// For array of blocks (Portable Text)
+	if (field.type === 'array' && field.of?.some((t: any) => t.type === 'block')) {
+		return 'portableText';
+	}
+
+	return field.type;
+}
+
+/**
+ * Transforms an input value into the correct Sanity format based on its schema type.
+ * @param {any} value The input value from the user mapping.
+ * @param {string | null} type The determined Sanity field type.
+ * @returns {any} The transformed value ready for Sanity.
+ */
+function transformValue(value: any, type: string | null): any {
+	switch (type) {
+		case 'slug':
+			return { _type: 'slug', current: value };
+		case 'reference':
+			return { _type: 'reference', _ref: value };
+		case 'image':
+			return { _type: 'image', asset: { _type: 'reference', _ref: value } };
+		case 'file':
+			return { _type: 'file', asset: { _type: 'reference', _ref: value } };
+		case 'portableText':
+			if (typeof value !== 'string') return value; // Assume it's already formatted
+			return [
+				{
+					_type: 'block',
+					_key: generateRandomKey(),
+					style: 'normal',
+					children: [{ _type: 'span', text: value, marks: [] }],
+					markDefs: [],
+				},
+			];
+		default:
+			// For string, number, boolean, text, etc., return as is.
+			return value;
+	}
+}
+
 export class SanitySchemaMapper implements INodeType {
 	description: INodeTypeDescription = {
-		// - SECTION 1: NODE IDENTITY (from our plan) -
 		displayName: 'Sanity Schema Mapper',
+		icon: 'file:sanitySchemaMapper.svg',
 		name: 'sanitySchemaMapper',
-		// FIX: The 'group' property also requires `as const` for strict type checking.
 		group: ['transform'] as const,
 		version: 1,
 		description: 'Takes a Sanity schema and input data, then transforms it into a valid Sanity document.',
 		defaults: {
 			name: 'Sanity Mapper',
 		},
-		// FIX: Use `as const` to tell TypeScript to infer a specific tuple type, not a general string array.
-   inputs: [{
-        type: NodeConnectionType.Main,
-        displayName: 'Input',
-    }],
-    outputs: [{
-        type: NodeConnectionType.Main,
-        displayName: 'Output',
-    }],
+		inputs: [{ type: NodeConnectionType.Main, displayName: 'Input' }],
+		outputs: [{ type: NodeConnectionType.Main, displayName: 'Output' }],
 		properties: [
-			// - SECTION 2: NODE PROPERTIES (UI) (from our plan) -
-
-			// 1. Sanity Schema Input
 			{
 				displayName: 'Sanity Document Schema',
 				name: 'schema',
@@ -57,8 +105,6 @@ export class SanitySchemaMapper implements INodeType {
 				default: '',
 				description: 'Paste the JSON schema for your Sanity document type. Found in your Sanity project schema files.',
 			},
-
-			// 2. Field Mappings
 			{
 				displayName: 'Field Mappings',
 				name: 'mappings',
@@ -95,14 +141,12 @@ export class SanitySchemaMapper implements INodeType {
 		],
 	};
 
-	// - SECTION 3: EXECUTION LOGIC (from our plan) -
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
-		// Get the node parameters as defined in the properties array
-		const schemaString = this.getNodeParameter('schema', 0) as string;
-		const { mappings } = this.getNodeParameter('mappings', 0) as {
+		const schemaString = this.getNodeParameter('schema', 0, '') as string;
+		const { mappings } = this.getNodeParameter('mappings', 0, { values: [] }) as {
 			mappings: { values: { sanityField: string; inputValue: any }[] };
 		};
 
@@ -110,36 +154,28 @@ export class SanitySchemaMapper implements INodeType {
 		try {
 			schema = JSON.parse(schemaString);
 		} catch (error) {
-			new NodeOperationError(this.getNode(), 'Invalid Sanity Schema JSON provided.')
+			throw new NodeOperationError(this.getNode(), 'Invalid Sanity Schema JSON provided.');
 		}
 
-		// Iterate over each item passed from the previous node
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-			const outputDocument: { [key: string]: any } = {};
+			const outputDocument: { [key: string]: any } = {
+				_type: schema.name,
+			};
 
-			// Set the document type from the schema name
-			outputDocument._type = schema.name;
-
-			// Process each mapping rule defined by the user
 			for (const rule of mappings.values) {
 				const sanityFieldPath = rule.sanityField;
 				const inputValue = rule.inputValue;
 
-				// TODO: SECTION 4 - FIELD TYPE TRANSFORMATION LOGIC
-				// This is where we will implement the "special sauce".
-				// For now, we'll just do a direct mapping.
-				// In the next step, we will:
-				// 1. Look up the field type from the schema.
-				// 2. Transform the `inputValue` based on its type (slug, reference, portable text, etc.).
-				// 3. Set the transformed value.
+				// Determine the field type from the schema
+				const fieldType = getFieldTypeFromSchema(schema, sanityFieldPath);
 
-				const transformedValue = inputValue; // Placeholder for transformation
+				// Transform the value based on its type
+				const transformedValue = transformValue(inputValue, fieldType);
 
-				// Use lodash.set to handle nested paths like 'slug.current'
+				// Set the transformed value on the output document
 				set(outputDocument, sanityFieldPath, transformedValue);
 			}
 
-			// Prepare the data for the next node
 			returnData.push({
 				json: outputDocument,
 				pairedItem: { item: itemIndex },
