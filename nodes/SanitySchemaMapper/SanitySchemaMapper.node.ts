@@ -1,10 +1,14 @@
+// IMPORTANT: To resolve TypeScript errors for lodash, you must install its type definitions
+// Run: npm i --save-dev @types/lodash
 import {
 	IExecuteFunctions,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
+	NodeConnectionType, // Add this import
+	NodeOperationError
 } from 'n8n-workflow';
-import { set } from 'lodash';
+import set from 'lodash/set';
 
 /**
  * Helper function to generate a random key for Portable Text blocks.
@@ -25,14 +29,22 @@ export class SanitySchemaMapper implements INodeType {
 		// - SECTION 1: NODE IDENTITY (from our plan) -
 		displayName: 'Sanity Schema Mapper',
 		name: 'sanitySchemaMapper',
-		group: ['transform'],
+		// FIX: The 'group' property also requires `as const` for strict type checking.
+		group: ['transform'] as const,
 		version: 1,
 		description: 'Takes a Sanity schema and input data, then transforms it into a valid Sanity document.',
 		defaults: {
 			name: 'Sanity Mapper',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		// FIX: Use `as const` to tell TypeScript to infer a specific tuple type, not a general string array.
+   inputs: [{
+        type: NodeConnectionType.Main,
+        displayName: 'Input',
+    }],
+    outputs: [{
+        type: NodeConnectionType.Main,
+        displayName: 'Output',
+    }],
 		properties: [
 			// - SECTION 2: NODE PROPERTIES (UI) (from our plan) -
 
@@ -98,7 +110,7 @@ export class SanitySchemaMapper implements INodeType {
 		try {
 			schema = JSON.parse(schemaString);
 		} catch (error) {
-			throw new Error('Invalid Sanity Schema JSON provided.');
+			new NodeOperationError(this.getNode(), 'Invalid Sanity Schema JSON provided.')
 		}
 
 		// Iterate over each item passed from the previous node
