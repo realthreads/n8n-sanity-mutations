@@ -33,6 +33,10 @@ function generateRandomKey(length = 12): string {
  * @returns {string | null} The type of the field, or null if not found.
  */
 function getFieldTypeFromSchema(schema: any, path: string): string | null {
+	// Ensure schema and schema.fields are valid before searching
+	if (!schema || !Array.isArray(schema.fields)) {
+		return null;
+	}
 	const fieldName = path.split('.')[0];
 	const field = schema.fields.find((f: any) => f.name === fieldName);
 	if (!field) return null;
@@ -86,8 +90,8 @@ function transformValue(value: any, type: string | null): any {
 export class SanitySchemaMapper implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Sanity Schema Mapper',
-		icon: 'file:sanitySchemaMapper.svg',
 		name: 'sanitySchemaMapper',
+		icon: 'file:sanitySchemaMapper.svg',
 		group: ['transform'] as const,
 		version: 1,
 		description: 'Takes a Sanity schema and input data, then transforms it into a valid Sanity document.',
@@ -146,8 +150,9 @@ export class SanitySchemaMapper implements INodeType {
 		const returnData: INodeExecutionData[] = [];
 
 		const schemaString = this.getNodeParameter('schema', 0, '') as string;
-		const { mappings } = this.getNodeParameter('mappings', 0, { values: [] }) as {
-			mappings: { values: { sanityField: string; inputValue: any }[] };
+		// FIX: Correctly get the mappings parameter and provide a default value.
+		const mappings = this.getNodeParameter('mappings', 0, { values: [] }) as {
+			values: { sanityField: string; inputValue: any }[];
 		};
 
 		let schema: any;
@@ -157,11 +162,18 @@ export class SanitySchemaMapper implements INodeType {
 			throw new NodeOperationError(this.getNode(), 'Invalid Sanity Schema JSON provided.');
 		}
 
+		// Add a check for a valid schema structure
+		if (!schema.name || !Array.isArray(schema.fields)) {
+			throw new NodeOperationError(this.getNode(), 'Schema must be a valid document schema object with "name" and "fields" properties.');
+		}
+
+
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			const outputDocument: { [key: string]: any } = {
 				_type: schema.name,
 			};
 
+			// The 'values' property is guaranteed to exist because of the default value provided above.
 			for (const rule of mappings.values) {
 				const sanityFieldPath = rule.sanityField;
 				const inputValue = rule.inputValue;
