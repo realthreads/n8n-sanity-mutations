@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "n8n nodes for Sanity.io mutations",
   "keywords": [
-    "n8n-community-node-package, sanity, cms, mutation, transform"
+    "n8n-community-node-package sanity cms mutation transform"
   ],
   "license": "MIT",
   "homepage": "realthreads.io",
