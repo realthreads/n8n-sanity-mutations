@@ -83,7 +83,8 @@ export class SanityMutation implements INodeType {
 				type: 'string',
 				default: '',
 				placeholder: 'doc-ID-12345',
-				description: 'The ID of the document to operate on. If creating and left blank, a random ID will be generated.',
+				description:
+					'The ID of the document to operate on. If creating and left blank, a random ID will be generated.',
 				displayOptions: {
 					show: {
 						operation: ['create', 'createOrReplace', 'createIfNotExists', 'delete', 'patch'],
@@ -98,7 +99,8 @@ export class SanityMutation implements INodeType {
 					alwaysOpen: true,
 				},
 				default: '{}',
-				description: 'The JSON data for the document or patch operation. For "Create", this is the full document. For "Patch", this specifies the patch operations.',
+				description:
+					'The JSON data for the document or patch operation. For "Create", this is the full document. For "Patch", this specifies the patch operations.',
 				displayOptions: {
 					show: {
 						operation: ['create', 'createOrReplace', 'createIfNotExists', 'patch'],
@@ -135,7 +137,9 @@ export class SanityMutation implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
-		const credentials = (await this.getCredentials('sanityMutationApi')) as ICredentialDataDecryptedObject;
+		const credentials = (await this.getCredentials(
+			'sanityMutationApi',
+		)) as ICredentialDataDecryptedObject;
 		const projectId = credentials.projectId as string;
 		const dataset = credentials.dataset as string;
 		const token = credentials.token as string;
@@ -154,7 +158,11 @@ export class SanityMutation implements INodeType {
 				try {
 					documentJson = JSON.parse(documentJsonString);
 				} catch (e) {
-					throw new NodeOperationError(this.getNode(), `Invalid JSON in "Document Data" field: ${e.message}`, { itemIndex });
+					throw new NodeOperationError(
+						this.getNode(),
+						`Invalid JSON in "Document Data" field: ${e.message}`,
+						{ itemIndex },
+					);
 				}
 
 				const options = this.getNodeParameter('options', itemIndex, {}) as {
@@ -171,18 +179,25 @@ export class SanityMutation implements INodeType {
 				// ** BUG FIX: Added separate logic for the patch operation **
 				if (operation === 'delete') {
 					if (!documentId) {
-						throw new NodeOperationError(this.getNode(), 'Document ID is required for delete operation.');
+						throw new NodeOperationError(
+							this.getNode(),
+							'Document ID is required for delete operation.',
+						);
 					}
 					mutationPayload[operation] = { id: documentId };
 				} else if (operation === 'patch') {
 					if (!documentId) {
-						throw new NodeOperationError(this.getNode(), 'Document ID is required for patch operation.');
+						throw new NodeOperationError(
+							this.getNode(),
+							'Document ID is required for patch operation.',
+						);
 					}
 					const patchData = { ...documentJson };
 					// A patch operation requires the ID to be at the top level of the patch object, with the key 'id'
 					patchData.id = documentId;
 					mutationPayload[operation] = patchData;
-				} else { // Handles create, createOrReplace, createIfNotExists
+				} else {
+					// Handles create, createOrReplace, createIfNotExists
 					const createData = { ...documentJson };
 					// A create operation can optionally have an ID, with the key '_id'
 					if (documentId) {
@@ -212,7 +227,6 @@ export class SanityMutation implements INodeType {
 					{ itemData: { item: itemIndex } },
 				);
 				returnData.push(...executionData);
-
 			} catch (error) {
 				if (this.continueOnFail()) {
 					const executionErrorData = {
@@ -229,7 +243,9 @@ export class SanityMutation implements INodeType {
 
 				if (error.isAxiosError && error.response && error.response.data) {
 					const detailedError = JSON.stringify(error.response.data, null, 2);
-					throw new NodeOperationError(this.getNode(), `Sanity API Error: ${detailedError}`, { itemIndex });
+					throw new NodeOperationError(this.getNode(), `Sanity API Error: ${detailedError}`, {
+						itemIndex,
+					});
 				}
 
 				throw error;

@@ -94,7 +94,8 @@ export class SanitySchemaMapper implements INodeType {
 		icon: 'file:sanitySchemaMapper.svg',
 		group: ['transform'] as const,
 		version: 1,
-		description: 'Takes a Sanity schema and input data, then transforms it into a valid Sanity document.',
+		description:
+			'Takes a Sanity schema and input data, then transforms it into a valid Sanity document.',
 		defaults: {
 			name: 'Sanity Mapper',
 		},
@@ -107,7 +108,8 @@ export class SanitySchemaMapper implements INodeType {
 				type: 'json',
 				required: true,
 				default: '',
-				description: 'Paste the JSON schema for your Sanity document type. Found in your Sanity project schema files.',
+				description:
+					'Paste the JSON schema for your Sanity document type. Found in your Sanity project schema files.',
 			},
 			{
 				displayName: 'Field Mappings',
@@ -129,14 +131,16 @@ export class SanitySchemaMapper implements INodeType {
 								name: 'sanityField',
 								type: 'string',
 								default: 'title',
-								description: 'The path to the target field in the Sanity document (e.g., title, slug.current, author)',
+								description:
+									'The path to the target field in the Sanity document (e.g., title, slug.current, author)',
 							},
 							{
 								displayName: 'Input Value',
 								name: 'inputValue',
 								type: 'string',
 								default: '={{ $json.someValue }}',
-								description: 'The value or expression from the incoming data to map to the Sanity field',
+								description:
+									'The value or expression from the incoming data to map to the Sanity field',
 							},
 						],
 					},
@@ -164,9 +168,11 @@ export class SanitySchemaMapper implements INodeType {
 
 		// Add a check for a valid schema structure
 		if (!schema.name || !Array.isArray(schema.fields)) {
-			throw new NodeOperationError(this.getNode(), 'Schema must be a valid document schema object with "name" and "fields" properties.');
+			throw new NodeOperationError(
+				this.getNode(),
+				'Schema must be a valid document schema object with "name" and "fields" properties.',
+			);
 		}
-
 
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			const outputDocument: { [key: string]: any } = {

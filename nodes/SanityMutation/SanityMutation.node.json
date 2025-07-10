@@ -4,9 +4,7 @@
 	"display_name": "Sanity Mutation",
 	"description": "Create, Update, and Delete documents in Sanity.io",
 	"author": "Real Threads",
-	"methods": [
-		"POST"
-	],
+	"methods": ["POST"],
 	"url": "https://www.sanity.io/docs/http-api",
 	"community_packages": {
 		"npm": "n8n-nodes-sanity-mutation"
