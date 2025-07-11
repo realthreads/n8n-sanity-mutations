@@ -1,4 +1,4 @@
-# n8n-nodes-_node-name_
+# n8n-nodes-sanity-mutation
 
 This is an n8n community node. It lets you use [Sanity CMS](https://www.sanity.io/) in your n8n workflows.
 
