@@ -1,0 +1,56 @@
+{
+    "name": "n8n-nodes-sanity-mutation",
+    "version": "0.1.3",
+    "description": "n8n nodes for Sanity.io mutations",
+    "keywords": ["n8n-community-node-package", "sanity", "cms", "mutation", "transform"],
+    "license": "MIT",
+    "homepage": "realthreads.io",
+    "author": {
+        "name": "David",
+        "email": "david@realthreads.io"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/realthreads/n8n-sanity-mutations.git"
+    },
+    "engines": {
+        "node": ">=20.15"
+    },
+    "main": "index.js",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc && gulp build:icons",
+        "dev": "tsc --watch",
+        "format": "prettier --write nodes credentials",
+        "lint": "eslint nodes credentials --ext .js,.ts",
+        "lint:fix": "eslint nodes credentials --ext .js,.ts --fix",
+        "prepublishOnly": "npm run build && npm run format"
+    },
+    "files": [
+        "dist"
+    ],
+    "n8n": {
+        "n8nNodesApiVersion": 1,
+        "credentials": [
+            "dist/credentials/SanityMutation.credentials.js"
+        ],
+        "nodes": [
+            "dist/nodes/SanityMutation.node.js",
+            "dist/nodes/SanitySchemaMapper.node.js"
+        ]
+    },
+    "devDependencies": {
+        "@types/lodash": "^4.17.20",
+        "@typescript-eslint/parser": "~8.32.0",
+        "eslint": "^8.57.0",
+        "eslint-plugin-n8n-nodes-base": "^1.16.3",
+        "gulp": "^5.0.0",
+        "prettier": "^3.5.3",
+        "typescript": "^5.8.2"
+    },
+    "peerDependencies": {
+        "n8n-workflow": "*"
+    }
+}
