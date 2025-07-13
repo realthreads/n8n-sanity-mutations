@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-sanity-mutation",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "n8n nodes for Sanity.io mutations",
   "keywords": ["n8n-community-node-package", "sanity", "cms", "mutation", "transform"  ],
   "license": "MIT",
@@ -16,7 +16,7 @@
   "engines": {
     "node": ">=20.15"
   },
-  "main": "dist/nodes/SanityMutation.node.js",
+  "main": "dist/nodes/SanityMutation/SanityMutation.node.js",
     "files": [
     "dist"
   ],
@@ -31,11 +31,11 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/SanityMutation.credentials.js"
+      "dist/credentials/SanityMutationApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/SanityMutation.node.js",
-      "dist/nodes/SanitySchemaMapper.node.js"
+      "dist/nodes/SanityMutation/SanityMutation.node.js",
+      "dist/nodes/SanitySchemaMapper/SanitySchemaMapper.node.js"
     ]
   },
   "devDependencies": {
