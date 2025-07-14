@@ -1,0 +1,12 @@
+{
+	"node": "SanitySchemaMapper.node",
+	"node_name": "SanitySchemaMapper",
+	"display_name": "Sanity Schema Mapper",
+	"description": "Takes a Sanity schema and input data, then transforms it into a valid Sanity document.",
+	"author": "Real Threads",
+	"methods": ["POST"],
+	"url": "https://www.sanity.io/docs/http-api",
+	"community_packages": {
+		"npm": "n8n-nodes-sanity-schema-mapper"
+	}
+}

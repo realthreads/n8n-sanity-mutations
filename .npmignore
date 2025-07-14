@@ -1,2 +1,11 @@
 .DS_Store
 *.tsbuildinfo
+
+# Source files
+nodes/
+credentials/
+
+# Development files
+.vscode/
+.idea/
+*.log
