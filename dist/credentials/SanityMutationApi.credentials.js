@@ -37,6 +37,19 @@ class SanityMutationApi {
                 required: true,
             },
         ];
+        this.test = {
+            request: {
+                method: 'GET',
+                url: '=https://{{$credentials.projectId}}.api.sanity.io/v2021-10-21/data/query/{{$credentials.dataset}}',
+                qs: {
+                    query: `*[_type == "sanity.project" && _id == "sane-project-name"]`,
+                },
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': '=Bearer {{$credentials.token}}',
+                },
+            },
+        };
     }
 }
 exports.SanityMutationApi = SanityMutationApi;
