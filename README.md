@@ -45,6 +45,8 @@ Usage guidance available at: https://realthreads.io/projects/n8n-sanity-nodes
 
 ## Version history
 
+* Version 0.1.6: Add credential test.
+
+* Version 0.1.5: Initial working release with two nodes to: transform data into valid Sanity documents; create, edit and delete Sanity documents.
+
 * Version 0.1.0: Initial release with two nodes to: transform data into valid Sanity documents; create, edit and delete Sanity documents.
-
-
